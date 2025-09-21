@@ -63,6 +63,8 @@
             height: 90%;
             z-index: 100;
             background: black;
+            /* 隐藏控制条 */
+            object-fit: cover;
         }
 
         #result-video {
@@ -75,6 +77,8 @@
             height: 90%;
             z-index: 100;
             background: black;
+            /* 隐藏控制条 */
+            object-fit: cover;
         }      
         
         .hidden {
@@ -90,8 +94,14 @@
             z-index: -1;
         }
 
+        /* 自定义视频控制提示 */
 
-
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body>
@@ -107,7 +117,8 @@
     </video>
 
     <div id="result-screen" class="screen hidden">
-        <video id="result-video" controls></video>
+        <video id="result-video"></video>
+        <div id="skip-hint" class="skip-hint hidden">点击屏幕跳过</div>
     </div>
 
     <script>
@@ -117,7 +128,7 @@
             const gachaVideo = document.getElementById('gacha-video');
             const resultScreen = document.getElementById('result-screen');
             const resultVideo = document.getElementById('result-video');
-            const replayButton = document.getElementById('replay-button');
+            const skipHint = document.getElementById('skip-hint');
 
             // 替换为你实际拥有的干员视频文件名
             const operatorVideos = [
@@ -127,6 +138,7 @@
             gachaButton.addEventListener('click', function() {
                 prepareScreen.classList.add('hidden');
                 gachaVideo.classList.remove('hidden');
+                skipHint.classList.remove('hidden');
                 gachaVideo.play();
                 
                 gachaVideo.addEventListener('click', function() {
@@ -135,21 +147,37 @@
                 
                 gachaVideo.onended = function() {
                     gachaVideo.classList.add('hidden');
+                    skipHint.classList.add('hidden');
                     resultScreen.classList.remove('hidden');
+                    skipHint.classList.remove('hidden');
                     
                     // 随机选择一个干员视频
                     const randomIndex = Math.floor(Math.random() * operatorVideos.length);
                     // 确保路径正确，如果视频在子文件夹中，需要添加路径前缀
                     resultVideo.src = 'videos/' + operatorVideos[randomIndex];
                     resultVideo.play();
+                    
                     resultVideo.addEventListener('click', function() {
-                    resultVideo.currentTime = resultVideo.duration; // 直接结束视频
-            });
+                        resultVideo.currentTime = resultVideo.duration; // 直接结束视频
+                    });
                 };
             });
-                    resultVideo.onended = function() {
-                        location.reload(true);
-                    } 
+            
+            resultVideo.onended = function() {
+                resultVideo.addEventListener('click', function() {
+                location.reload(true);
+                    });
+            };
+            
+            // 添加鼠标移动显示/隐藏提示
+            let hintTimeout;
+            document.addEventListener('mousemove', function() {
+                skipHint.classList.remove('hidden');
+                clearTimeout(hintTimeout);
+                hintTimeout = setTimeout(function() {
+                    skipHint.classList.add('hidden');
+                }, 2000);
+            });
         });
     </script>
 </body>
