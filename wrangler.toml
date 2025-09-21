@@ -1,0 +1,5 @@
+name = "ark-yanfeng" # 给您的 Worker 起一个名字
+compatibility_date = "2025-09-21"
+
+[site]
+bucket = "./模拟器v1.1.1"
