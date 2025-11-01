@@ -59,8 +59,8 @@
             left: 0;
             min-width: 100%;
             min-height: 100%;
-            width: auto;
-            height: 90%;
+            width: 100%;
+            height: auto;
             z-index: 100;
             background: black;
             /* 隐藏控制条 */
@@ -112,7 +112,6 @@
     </div>
 
     <video id="gacha-video" class="hidden">
-        <source src="6.mp4" type="video/mp4">
         您的浏览器不支持视频标签。
     </video>
 
@@ -123,62 +122,117 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const prepareScreen = document.getElementById('prepare-screen');
-            const gachaButton = document.getElementById('gacha-button');
-            const gachaVideo = document.getElementById('gacha-video');
-            const resultScreen = document.getElementById('result-screen');
-            const resultVideo = document.getElementById('result-video');
-            const skipHint = document.getElementById('skip-hint');
+    // 1. 获取所有元素
+    const prepareScreen = document.getElementById('prepare-screen');
+    const gachaButton = document.getElementById('gacha-button');
+    const gachaVideo = document.getElementById('gacha-video');
+    const resultScreen = document.getElementById('result-screen');
+    const resultVideo = document.getElementById('result-video');
+    const skipHint = document.getElementById('skip-hint');
 
-            // 替换为你实际拥有的干员视频文件名
-            const operatorVideos = [
-                'mna.mp4','拾伍檐枫.mp4','拾伍檐羽.mp4','深空海檐羽.mp4','15檐枫.mp4','15檐羽.mp4','檐羽.mp4'
-            ];
+    const sixStarGachaVideo = '6.mp4'; // 你的六星抽卡动画 (你原来用的那个)
+    const fiveStarGachaVideo = '5.mp4'; // (!!!) 你需要提供一个五星抽卡动画
+    const GachaVideo = '6.mp4'; // (!!!) 你需要提供一个五星抽卡动画
 
-            gachaButton.addEventListener('click', function() {
-                prepareScreen.classList.add('hidden');
-                gachaVideo.classList.remove('hidden');
-                skipHint.classList.remove('hidden');
-                gachaVideo.play();
-                
-                gachaVideo.addEventListener('click', function() {
-                    gachaVideo.currentTime = gachaVideo.duration; // 直接结束视频
-                });
-                
-                gachaVideo.onended = function() {
-                    gachaVideo.classList.add('hidden');
-                    skipHint.classList.add('hidden');
-                    resultScreen.classList.remove('hidden');
-                    skipHint.classList.remove('hidden');
-                    
-                    // 随机选择一个干员视频
-                    const randomIndex = Math.floor(Math.random() * operatorVideos.length);
-                    // 确保路径正确，如果视频在子文件夹中，需要添加路径前缀
-                    resultVideo.src = 'videos/' + operatorVideos[randomIndex];
-                    resultVideo.play();
-                    
-                    resultVideo.addEventListener('click', function() {
-                        resultVideo.currentTime = resultVideo.duration; // 直接结束视频
-                    });
-                };
-            });
-            
-            resultVideo.onended = function() {
-                resultVideo.addEventListener('click', function() {
-                location.reload(true);
-                    });
-            };
-            
-            // 添加鼠标移动显示/隐藏提示
-            let hintTimeout;
-            document.addEventListener('mousemove', function() {
-                skipHint.classList.remove('hidden');
-                clearTimeout(hintTimeout);
-                hintTimeout = setTimeout(function() {
-                    skipHint.classList.add('hidden');
-                }, 2000);
-            });
-        });
+    const sixStarOperators = [
+        'mna.mp4', '拾伍檐枫.mp4', '拾伍檐羽.mp4', '深空海檐羽.mp4',  '檐羽.mp4',
+    ];
+    const fiveStarOperators = [
+        '五星 拾伍檐羽.mp4', '五星 热墟檐枫.mp4','五星 拾伍檐枫.mp4','魔旅檐枫.mp4','魔旅檐羽.mp4','清璇.mp4',
+    ];
+    const GachaOperators = [
+        'miku.mp4',
+    ];
+
+    let currentRarity = 0; // 0=未抽, 5=五星, 6=六星
+    let resultHasEnded = false; // 状态变量，跟踪结果视频是否已结束
+
+    // 2. 把所有事件监听器定义在顶层
+
+    // 主按钮点击事件
+            gachaButton.addEventListener('click', function() {
+                prepareScreen.classList.add('hidden');
+                
+                // 5:1 的概率，意味着六星的概率是 1 / (5 + 1) = 1/6
+                const chance = randomFloat = Math.random() * 1000;
+                
+                if (chance < (200)) {
+                    // 抽到六星
+                    currentRarity = 6;
+                    gachaVideo.src = sixStarGachaVideo; // 设置六星【抽卡动画】
+
+                } 
+                    else if (chance > 998.5) {
+                    currentRarity = 7;
+                    gachaVideo.src = GachaVideo;
+                }
+                    else {
+                    // 抽到五星
+                    currentRarity = 5;
+                    gachaVideo.src = fiveStarGachaVideo; // 设置五星【抽卡动画】
+                }
+                
+                gachaVideo.classList.remove('hidden');
+                skipHint.innerText = '点击屏幕跳过';
+                skipHint.classList.remove('hidden');
+                gachaVideo.play();
+            });
+
+    // 结果视频结束事件
+            gachaVideo.onended = function() {
+                gachaVideo.classList.add('hidden');
+                resultScreen.classList.remove('hidden');
+                
+                let chosenVideo = '';
+                let operatorsList = [];
+                
+                // 根据之前抽到的星级，选择对应的干员列表
+                if (currentRarity === 6) {
+                    operatorsList = sixStarOperators;
+                } 
+                else if (currentRarity ===7){
+                    operatorsList = GachaOperators;
+                }
+                else {
+                    operatorsList = fiveStarOperators;
+                }
+                
+                // 从选定的列表中随机选一个干员
+                const randomIndex = Math.floor(Math.random() * operatorsList.length);
+                chosenVideo = operatorsList[randomIndex];
+                
+                // 设置并播放【干员结果】视频
+                resultVideo.src = 'videos/' + chosenVideo; // 别忘了 'videos/' 路径
+                resultHasEnded = false; // 重置状态
+                resultVideo.play();
+            };
+
+
+    // 抽卡视频点击事件（跳过）
+    gachaVideo.addEventListener('click', function() {
+        gachaVideo.currentTime = gachaVideo.duration; // 直接结束视频
+    });
+
+    // 结果视频点击事件（一个处理器处理两种情况）
+    resultVideo.addEventListener('click', function() {
+        
+            location.reload(true);
+    });
+
+
+    // 3. 鼠标移动显示/隐藏提示的逻辑 (这个逻辑是好的，保持不变)
+    let hintTimeout;
+    document.addEventListener('mousemove', function() {
+        // 只在视频播放时显示提示
+        if (!gachaVideo.classList.contains('hidden') || !resultScreen.classList.contains('hidden')) {
+            skipHint.classList.remove('hidden');
+            clearTimeout(hintTimeout);
+            hintTimeout = setTimeout(function() {
+                skipHint.classList.add('hidden');
+            }, 2000);
+        }
+    });
+});
     </script>
 </body>
 </html>
